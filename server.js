@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser());
 
-let port = 80
+let port = 8000
 
 app.set('view engine', 'ejs');
 
