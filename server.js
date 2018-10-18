@@ -18,10 +18,20 @@ let port = 8000
 app.set('view engine', 'ejs');
 
 
+function authenticate(req, res, next){
+	if(req.session.loggedin == true){
+		return next();
+	}else{
+		res.redirect("/login")
+		res.end()
+		return
+	}
+}
+
 let failure = ""
 
 /* serves main page */
-app.get("/", function(req, res) {
+app.get("/",authenticate, function(req, res) {
 	res.render('index.ejs',{
 		status:fs.readFileSync('status.txt', 'utf8'),
 		failure:failure
@@ -29,7 +39,15 @@ app.get("/", function(req, res) {
 	failure = ""
 });
 
-app.post("/on", function(req,res){
+app.get("/login", function(req, res) {
+	res.render('index.ejs',{
+		status:fs.readFileSync('status.txt', 'utf8'),
+		failure:failure
+	})
+	failure = ""
+});
+
+app.post("/on",authenticate, function(req,res){
 	if(fs.readFileSync('status.txt', 'utf8') == "WORKING"){
 		failure = "was still working.... please retry later"
 		return res.redirect("back")
@@ -43,7 +61,7 @@ app.post("/on", function(req,res){
 	res.redirect("back")
 })
 
-app.post("/off", function(req,res){
+app.post("/off", authenticate, function(req,res){
 
 	if(fs.readFileSync('status.txt', 'utf8') == "WORKING"){
 		failure = "was still working.... please retry later"
@@ -59,7 +77,7 @@ app.post("/off", function(req,res){
 
 })
 
-app.post("/reload", function(req,res){
+app.post("/reload",authenticate, function(req,res){
 
 	reload()
 	res.redirect("back")
