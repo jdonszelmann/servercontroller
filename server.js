@@ -5,13 +5,15 @@ const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const util = require('util');
+const child_process = require('child_process');
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser());
 
-let port = 8000
+let port = 80
 
 app.set('view engine', 'ejs');
 
@@ -37,6 +39,7 @@ app.post("/on", function(req,res){
 		return res.redirect("back")
 	}
  	fs.writeFileSync("status.txt","WORKING",'utf8');
+	start()
 	res.redirect("back")
 })
 
@@ -50,7 +53,8 @@ app.post("/off", function(req,res){
 		failure = "was already off...."
 		return res.redirect("back")
 	}
-		fs.writeFileSync("status.txt","WORKING",'utf8');
+	fs.writeFileSync("status.txt","WORKING",'utf8');
+	stop()
 	res.redirect("back")
 
 })
@@ -62,3 +66,19 @@ app.post("/loaded",function(req,res){
 app.listen(port, function() {
 	console.log("Listening on " + (process.env.PORT || port));
 });
+
+
+const exec = util.promisify(require('child_process').exec);
+
+async function start() {
+	const { stdout, stderr } = await exec('python3 start_server.py');
+	console.log('stdout:', stdout);
+	console.log('stderr:', stderr);
+}
+
+async function stop() {
+	const { stdout, stderr } = await exec('python3 stop_server.py');
+	console.log('stdout:', stdout);
+	console.log('stderr:', stderr);
+}
+
