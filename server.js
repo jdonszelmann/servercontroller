@@ -64,7 +64,7 @@ app.post("/loaded",function(req,res){
 })
 
 app.listen(port, function() {
-	console.log("Listening on " + (process.env.PORT || port));
+	console.log("Listening on port " + (process.env.PORT || port));
 });
 
 
