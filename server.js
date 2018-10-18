@@ -59,6 +59,13 @@ app.post("/off", function(req,res){
 
 })
 
+app.post("/reload", function(req,res){
+
+	reload()
+	res.redirect("back")
+
+})
+
 app.post("/loaded",function(req,res){
 	fs.writeFileSync("status.txt","ON",'utf8');
 })
@@ -78,6 +85,13 @@ async function start() {
 
 async function stop() {
 	const { stdout, stderr } = await exec('python3 stop_server.py');
+	console.log('stdout:', stdout);
+	console.log('stderr:', stderr);
+}
+
+
+async function reload() {
+	const { stdout, stderr } = await exec('git pull');
 	console.log('stdout:', stdout);
 	console.log('stderr:', stderr);
 }
