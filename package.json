@@ -10,6 +10,9 @@
 		"body-parser": "*",
 		"ejs": "*",
 		"express": "*",
-		"child_process": "*"
+		"child_process": "*",
+		"morgan": "*",
+		"express-session": "*",
+		"cookie-parser": "*"
 	}
 }

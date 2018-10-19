@@ -8,30 +8,51 @@ const fs = require('fs');
 const util = require('util');
 const child_process = require('child_process');
 const app = express();
+const morgan = require('morgan');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser());
+app.use(morgan('dev'));
+app.use(cookieParser());
+
+app.use(session({
+    key: 'user_sid',
+    secret: 'somerandonstuffs',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        expires: 600000
+    }
+}));
+
+let sessionChecker = (req, res, next) => {
+    if (req.session.user && req.cookies.user_sid) {
+        next();
+    } else {
+        res.redirect("/login")
+    }    
+};
+
+app.use((req, res, next) => {
+    if (req.cookies.user_sid && !req.session.user) {
+        res.clearCookie('user_sid');        
+    }
+    next();
+});
+
 
 let port = 8000
 
 app.set('view engine', 'ejs');
 
 
-function authenticate(req, res, next){
-	if(req.session.loggedin == true){
-		return next();
-	}else{
-		res.redirect("/login")
-		res.end()
-		return
-	}
-}
-
 let failure = ""
 
 /* serves main page */
-app.get("/",authenticate, function(req, res) {
+app.get("/", sessionChecker, function(req, res) {
 	res.render('index.ejs',{
 		status:fs.readFileSync('status.txt', 'utf8'),
 		failure:failure
@@ -39,15 +60,7 @@ app.get("/",authenticate, function(req, res) {
 	failure = ""
 });
 
-app.get("/login", function(req, res) {
-	res.render('index.ejs',{
-		status:fs.readFileSync('status.txt', 'utf8'),
-		failure:failure
-	})
-	failure = ""
-});
-
-app.post("/on",authenticate, function(req,res){
+app.post("/on",sessionChecker, function(req,res){
 	if(fs.readFileSync('status.txt', 'utf8') == "WORKING"){
 		failure = "was still working.... please retry later"
 		return res.redirect("back")
@@ -61,7 +74,27 @@ app.post("/on",authenticate, function(req,res){
 	res.redirect("back")
 })
 
-app.post("/off", authenticate, function(req,res){
+app.get("/login",function(req,res){
+	res.render("login.ejs",{status:""})
+})
+
+app.post("/login",function(req,res){
+	let username = req.body.username,
+		password = req.body.password;
+	if(username == "jonay2000" && password == "Abcdefgh1"){
+		req.session.user = true
+		res.redirect("/")
+	}else{
+		res.render("login.ejs",{status:"incorrect password or username"})
+	}
+})
+
+app.post("/logout",function(req,res){
+	req.session.user = undefined;
+	res.redirect("/")
+})
+
+app.post("/off",sessionChecker, function(req,res){
 
 	if(fs.readFileSync('status.txt', 'utf8') == "WORKING"){
 		failure = "was still working.... please retry later"
@@ -77,14 +110,14 @@ app.post("/off", authenticate, function(req,res){
 
 })
 
-app.post("/reload",authenticate, function(req,res){
+app.post("/reload",sessionChecker, function(req,res){
 
 	reload()
 	res.redirect("back")
 
 })
 
-app.post("/loaded",function(req,res){
+app.post("/loaded",sessionChecker,function(req,res){
 	fs.writeFileSync("status.txt","ON",'utf8');
 })
 
