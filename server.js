@@ -142,7 +142,7 @@ async function stop() {
 
 
 async function reload() {
-	const { stdout, stderr } = await exec('git pull');
+	const { stdout, stderr } = await exec('git pull && npm install');
 	console.log('stdout:', stdout);
 	console.log('stderr:', stderr);
 }
